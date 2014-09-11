@@ -3,7 +3,7 @@ var shadockApp = (function ShadockApp()
 {
 	"use strict";
 
-	this.dbData = null
+	this.dbData = null;
 	this._this = this;
 
 	this.common = {};
@@ -13,7 +13,7 @@ var shadockApp = (function ShadockApp()
 		var list = { children: [], nochildren: []};
 		for (var b in this.dbData.tree.branches)
 		{
-			currBranch = branches[b];
+			var currBranch = this.dbData.tree.branches[b];
 			this.common.getBranchChildren(currBranch, list);
 		}
 		return list;
@@ -68,7 +68,7 @@ var shadockApp = (function ShadockApp()
 		}
 		// on vérifie d'abord l'intégrité de la fonction de gestion
 		if ('function' !== typeof(execRule)){
-			throw new Error "le paramètre 'execRule' doit être une Fonction");
+			throw new Error("le paramètre 'execRule' doit être une Fonction");
 		}
 		// la verif de l'existance des nids et leur nombre est à la charge de la présente fonction
 		if ('nests' in branch && branch.nests.length >0){
@@ -88,11 +88,11 @@ var shadockApp = (function ShadockApp()
 		{
 			throw new Error("Le prochain nid du shadock est inconnu");
 		}
-		var haveAllGone = true;
+		var willHaveAllGoneAtDayD = true;
 		for (var s in movingShadock.nextNest.shadocks)
 		{
-			otherShadock = movingShadock.nextNest.shadocks[s];
-			willHaveAllGoneAtDayD &= parseInt((otherShadock.arrivalDate.getTime()-movingShadock.departureDate.getTime())/(24*3600*1000*7))
+			var otherShadock = movingShadock.nextNest.shadocks[s];
+			willHaveAllGoneAtDayD &= (parseInt((otherShadock.arrivalDate.getTime() - movingShadock.departureDate.getTime())/(24*3600*1000*7)) >1);
 		}
 		return (willHaveAllGoneAtDayD ==1);
 	};
@@ -116,33 +116,33 @@ var shadockApp = (function ShadockApp()
 			this.dbData = JSON.parse(window.localStorage.get(ShadockApp.DB_NAME));
 		}
 	};
-	/*
+	/**
+	 * @describe Liste de tous les nids posés sur l’arbre.
 	 * @public
 	 * Cette fonction recense tous les nids posés sur l'arbre
 	 * toutes branches confondues
 	 * @return Array<nest> retListNests
 	 */
-	this.api.getAllNestsInTree = function()
+	this.api.getAllNestsInTree = function getAllNestsInTree()
 	{
-		var _this = this;
-		this.retListNests;
-		if (this.retListNests === null)
+		if (typeof getAllNestsInTree.retListNests == 'undefined')
 		{
 			var execRule = function(branch)
 				{
-					_this.retListNests.push(branch.nests);
+					getAllNestsInTree.retListNests.push(branch.nests);
 				};
 
 			for (var b in this.dbData.tree.branches)
 			{
-				currBranch = this.dbData.tree.branches[b];
-				this.api.getNestsInBranch(currBranch, ruleCallback);
+				var currBranch = this.dbData.tree.branches[b];
+				this.api.getNestsInBranch(currBranch, execRule);
 			}
 		}
-		return this.retListNests;
+		return getAllNestsInTree.retListNests;
 
 	};
 	/**
+	 * @describe Liste des nids qui ont plus de 5 Shadocks
 	 * @public
 	 */
 	this.api.getAllNestsWithMoreThanFiveShadocks = function()
@@ -160,30 +160,34 @@ var shadockApp = (function ShadockApp()
 
 		for (var t in this.dbData.tree.branches)
 		{
-			currBranch = this.dbData.tree.branches[t];
+			var currBranch = this.dbData.tree.branches[t];
 			this.api.getNestsInBranch(currBranch, execRule);
 		}
 		return retListNests;
 	};
 	/**
+	 * @describe Liste de tous les Shadocks qui peuvent emménager dans un autre nid
 	 * @public
 	 */
 	this.api.getAllShadockMovableToAnotherNest = function()
 	{
-		var retListShadocks = [];
+		var retListMovableShadocks = [];
 		var allNests = this.api.getAllNestsInTree();
 		for (var n in allNests)
 		{
-			currNest = allNests[n];
+			var currNest = allNests[n];
 			for (var s in currNest.shadocks)
 			{
-				if (true === this.common.isShadockMovable(shadock[s]))
-				listMovableShadocks.push(shadock[s]);
+				var currShadock = currNest.shadocks[s];
+				if (true === this.common.isShadockMovable(currShadock)){
+					retListMovableShadocks.push(currShadock);
+				}
 			}
 		}
-		return retListShadocks;
+		return retListMovableShadocks;
 	};
 	/**
+	 * @describe Liste des nids qui sont en forme de casserole mais pas rouge
 	 * @public
 	 */
 	this.api.getNestWithBoilerShapeAndNotRed = function()
@@ -196,18 +200,18 @@ var shadockApp = (function ShadockApp()
 			if (prop.type !='shape' && prop.type != 'color') {
 				return true;
 			}
-			return (prop.type == 'shape' && prop.value =='boiler')
-				|| (prop.type == 'color' && prop.value != 'red');
+			return 	(prop.type == 'shape' && prop.value =='boiler') || 
+					(prop.type == 'color' && prop.value != 'red');
 		};
 		// on parcourre tous les nids
 		for (var n in allNests)
 		{
-			currNest = allNests[n];
-			isValid = true;
+			var currNest = allNests[n];
+			var isValid = true;
 			// pour chaque propriété du nid, on vérifie les critères
 			for (var p in currNest.props)
 			{
-				isValid &= meetReqs(currNest.props[p])){
+				isValid &= meetReqsRule(currNest.props[p]);
 			}
 			if (isValid){
 				retListNests.push(currNest);
@@ -217,35 +221,48 @@ var shadockApp = (function ShadockApp()
 		return retListNests;
 	};
 	/**
+	 * @describe Liste des branches qui supportent d’autres branches
 	 * @public
 	 */
 	this.api.getAllBranchesWithChildren = function()
 	{
 		return this.api.getAllBranchesWithOrWithoutChildren().children;
-	}
+	};
 	/**
+	 * @describe Liste des branches qui ne supportent pas de branche
 	 * @public
 	 */
 	this.api.getAllBranchesWithoutChildren = function()
 	{
 		return this.api.getAllBranchesWithOrWithoutChildren().nochildren;
 	};
-
+	/*
+	 * @describe  Liste des nids que supporte la branche “GaBuZoMe”
+	 * @public
+	 * @param {String} name
+	 */
 	this.api.getNestsInBranchName = function(name)
 	{
 		return this.common.getNestsInBranch(this.getBranchByName(name));
 	};
-
+	/**
+	 * @describe La liste des nids qui ont toutes les caractéristiques possibles
+	 * @public
+	 * @return {Object} Nest
+	 */
 	this.api.getBranchWithMaximumOfProperties = function()
 	{
 		var listNests = this.api.getAllNestsInTree();
-		retListNests = []; 
+		var retListNests = [];
+		// Récupération de compteurs de propriétés pour tous les nids 
 		for (var n in listNests)
 		{
-			currNest = listNests[n];
+			var currNest = listNests[n];
 			retListNests[currNest.id] = currNest.props.length;
 		}
+		// renversement de la collection et récup de l'ID du nid
 		var nestId = retListNests.reverse().shift();
+		// renvoit de l'objet Nid
 		return this.common.getNestById(nestId);
 	};
 	
@@ -254,11 +271,11 @@ var shadockApp = (function ShadockApp()
 	
 })();
 
-ShadockApp.start();
-ShadockApp.getAllNestsInTree();
-ShadockApp.getAllNestsWithMoreThanFiveShadocks();
-ShadockApp.getAllShadockMovableToAnotherNest();
-ShadockApp.getNestWithBoilerShapeAndNotRed();
-ShadockApp.getAllBranchesWithChildren();
-ShadockApp.getAllBranchesWithoutChildren();
-ShadockApp.getNestsInBranchName('GaBuZoMe'));
+shadockApp.start();
+shadockApp.getAllNestsInTree();
+shadockApp.getAllNestsWithMoreThanFiveShadocks();
+shadockApp.getAllShadockMovableToAnotherNest();
+shadockApp.getNestWithBoilerShapeAndNotRed();
+shadockApp.getAllBranchesWithChildren();
+shadockApp.getAllBranchesWithoutChildren();
+shadockApp.getNestsInBranchName('GaBuZoMe');
