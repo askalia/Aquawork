@@ -89,11 +89,10 @@ var shadockApp = (function ShadockApp()
 			throw new Error("Le prochain nid du shadock est inconnu");
 		}
 		var willHaveAllGoneAtDayD = true;
-		for (var s in movingShadock.nextNest.shadocks)
+		movingShadock.nextNest.shadocks.forEarch(function(otherShadock, idx)
 		{
-			var otherShadock = movingShadock.nextNest.shadocks[s];
 			willHaveAllGoneAtDayD &= (parseInt((otherShadock.arrivalDate.getTime() - movingShadock.departureDate.getTime())/(24*3600*1000*7)) >1);
-		}
+		});
 		return (willHaveAllGoneAtDayD ==1);
 	};
 
@@ -132,11 +131,10 @@ var shadockApp = (function ShadockApp()
 					getAllNestsInTree.retListNests.push(branch.nests);
 				};
 
-			for (var b in this.dbData.tree.branches)
+			this.dbData.tree.branches.forEach(function(currBranch, idx)
 			{
-				var currBranch = this.dbData.tree.branches[b];
 				this.api.getNestsInBranch(currBranch, execRule);
-			}
+			});
 		}
 		return getAllNestsInTree.retListNests;
 
@@ -151,18 +149,19 @@ var shadockApp = (function ShadockApp()
 		var execRule = function(branch)
 			{
 				var MAX_ITEMS = 5;
-				for (var n in branch.nests){
-					if (branch.nests[n].shadocks.length > MAX_ITEMS){
-						retListNests.push(branch.nests[n]);
+				branch.nests.forEach(function(currNest, idx)
+				{
+					if (currNest.shadocks.length > MAX_ITEMS){
+						retListNests.push(currNest);
 					}
-				}
+				});
 			};
 
-		for (var t in this.dbData.tree.branches)
+		this.dbData.tree.branches.forEach(function(currBranch, idx)
 		{
 			var currBranch = this.dbData.tree.branches[t];
-			this.api.getNestsInBranch(currBranch, execRule);
-		}
+			_this.api.getNestsInBranch(currBranch, execRule);
+		});
 		return retListNests;
 	};
 	/**
@@ -173,17 +172,15 @@ var shadockApp = (function ShadockApp()
 	{
 		var retListMovableShadocks = [];
 		var allNests = this.api.getAllNestsInTree();
-		for (var n in allNests)
+		allNests.forEach(function(currNest, nIdx)
 		{
-			var currNest = allNests[n];
-			for (var s in currNest.shadocks)
+			currNest.shadocks.forEach(function(currShadock, sIdx))
 			{
-				var currShadock = currNest.shadocks[s];
-				if (true === this.common.isShadockMovable(currShadock)){
+				if (true === _this.common.isShadockMovable(currShadock)){
 					retListMovableShadocks.push(currShadock);
 				}
-			}
-		}
+			});
+		});
 		return retListMovableShadocks;
 	};
 	/**
@@ -204,20 +201,19 @@ var shadockApp = (function ShadockApp()
 					(prop.type == 'color' && prop.value != 'red');
 		};
 		// on parcourre tous les nids
-		for (var n in allNests)
+		allNests.forEach(function(currNest, nIdx)
 		{
-			var currNest = allNests[n];
 			var isValid = true;
 			// pour chaque propriété du nid, on vérifie les critères
-			for (var p in currNest.props)
+			currNest.props.forEach(function(prop, pIdx)
 			{
-				isValid &= meetReqsRule(currNest.props[p]);
+				isValid &= meetReqsRule(prop);
 			}
-			if (isValid){
+			if (true === (!!isValid)){
 				retListNests.push(currNest);
 			}		
 			
-		}
+		});
 		return retListNests;
 	};
 	/**
@@ -255,18 +251,16 @@ var shadockApp = (function ShadockApp()
 		var listNests = this.api.getAllNestsInTree();
 		var retListNests = [];
 		// Récupération de compteurs de propriétés pour tous les nids 
-		for (var n in listNests)
+		listNests.forEach(function(currNest, nIdx)
 		{
-			var currNest = listNests[n];
 			retListNests[currNest.id] = currNest.props.length;
-		}
+		});
 		// renversement de la collection et récup de l'ID du nid
 		var nestId = retListNests.reverse().shift();
 		// renvoit de l'objet Nid
 		return this.common.getNestById(nestId);
 	};
-	
-	
+		
 	return this.api;	
 	
 })();
