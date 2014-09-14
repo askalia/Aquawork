@@ -434,14 +434,6 @@ ShadockApp.Nest = function(id, branch, props, shadocks)
 			_this.shadocks.push(shad);
 		});
 	};
-	this.getShadocksIds = function()
-	{
-		var ids = [];
-		this.shadocks.forEach(function(shadock){
-			ids.push(shadock.id);
-		});
-		return ids;
-	};
 };
 
 ShadockApp.Shadock = function(id, installedDate, nest)
