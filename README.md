@@ -4,7 +4,7 @@ My Shadock homework for Aquafadas
  ---------
 
 ## Les méthodes de l'API ShadockApp
-### >> shadockapp.js
+####> shadockapp.js
 ------------
 ###Liste de tous les nids posés sur l’arbre
 
@@ -41,7 +41,7 @@ ShadockApp.getNestWithMaximumProperties()
  ```
 ------------
 ##Les scenarios
-###>> scenarios.spec.js
+####> scenarios.spec.js
 ```sh
 runScenario(description, param, assertCallback)
  ```
