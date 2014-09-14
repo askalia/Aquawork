@@ -1,5 +1,6 @@
 // Scenarios de test
-var scenariosTest = {
+var scenariosTest =
+{
 	"Liste de tous les nids posés sur l’arbre" : function () {
 		var dataSource = {};
 		dataSource.tree = new ShadockApp.Tree();
@@ -20,7 +21,7 @@ var scenariosTest = {
 		subBranche_2Nest.addNest(new ShadockApp.Nest());
 
 		var shadockApp = new ShadockApp({ db: dataSource});
-		return shadockApp.getAllNestsInTree().length;
+		return shadockApp.getAllNestsInTree();
 
 	},
 	"Liste des nids qui ont plus de X Shadocks" : function(maxItems)
@@ -50,7 +51,7 @@ var scenariosTest = {
 		subBranche_2.addNest(nest4);
 
 		var shadockApp = new ShadockApp({ db: dataSource});
-		return shadockApp.getAllNestsWithMoreThanFiveShadocks(maxItems);
+		return shadockApp.getAllNestsWithMoreThanXShadocks(maxItems);
 	},
 	"Liste de tous les Shadocks qui peuvent emménager dans un autre nid" : function()
 	{
@@ -232,8 +233,8 @@ function runScenario(describer, term, expectation_cb)
 	}
 	var getResult = scenariosTest[describer](term);
 
-	console.log('run : '+describer);
-	console.log('result obtained : '+getResult);
+	console.log('[RUN] : '+describer);
+	//console.log('result obtained : '+getResult);
 
 	if (typeof(expectation_cb) == 'function')
 	{
@@ -244,10 +245,8 @@ function runScenario(describer, term, expectation_cb)
 
 
 // Appel des méthodes API
-
-// Appel des méthodes API
-
 runScenario("Liste de tous les nids posés sur l’arbre", null, function(nests){
+	console.
 	return (nests.length == 6);
 });
 
