@@ -36,6 +36,9 @@ function ShadockApp(args)
 	 */
 	this.getAllNestsWithMoreThanXShadocks = function(maxItems)
 	{
+		if (isNaN(maxItems)){
+			throw new Error("Le nombre max n'estpas indiqué");
+		}
 		var retListNests = [];
 		var execRule = function(branch)
 		{
@@ -80,37 +83,58 @@ function ShadockApp(args)
 	 * @public
 	 * @returns {Array<Nest>}
 	 */
-	this.getNestWithBoilerShapeAndColorNotRed = function()
+	this.getNestPropMatchingCriteria = function(criteria)
 	{
-		var retListNests = [];
 		var allNests = this.getAllNestsInTree();
-		// Cette règle vérifie les popriété d'un nid
-		// (ne suit pas ici le principe SOLID 'open/close' pour la gestion des critères)
-		var meetReqsRule = function(prop)
-		{
-			// si type de propriété non pertinent, on bypasse
-			if (prop.type !='shape' && prop.type != 'color') {
-				return true;
+
+		var runComparator = function (nestProp, criterion) {
+			var ret = false;
+			var operator = criterion.value.replace(/[^(!|>|<|>=|<=)]/g, '');
+			var term = criterion.value.replace(/(!|>|<|>=|<=)/g, '');
+			switch (operator) {
+				case '!' : ret = (nestProp.value !== term); break;
+				case '>' : ret = (nestProp.value > term); break;
+				case '>=': ret = (nestProp.value >= term); break;
+				case '<' : ret = (nestProp.value < term);break;
+				default : ret = (nestProp.value === term);
 			}
-			return 	(prop.type == 'shape' && prop.value =='boiler') ||
-				(prop.type == 'color' && prop.value != 'red');
+			return ret;
 		};
-		// on parcourre tous les nids
-		allNests.forEach(function(currNest, nIdx)
+
+		var getMatchingCriterion = function(nestProp)
 		{
-			var arePropsValid = true;
-			// pour chaque propriété du nid, on vérifie les critères
-			currNest.props.forEach(function(prop, pIdx)
+			var retCriterion = null;
+			criteria.forEach(function(criterion){
+				if (criterion.type == nestProp.type){
+					retCriterion = criterion;
+				}
+			});
+			return retCriterion;
+		};
+
+		var retNest = null;
+
+		allNests.forEach(function(currNest)
+		{
+			var isMatchingAll = true;
+			currNest.props.forEach(function(nestProp)
 			{
-				arePropsValid &= meetReqsRule(prop);
+				var matchingCriterion = getMatchingCriterion(nestProp);
+				if (matchingCriterion !== null){
+					isMatchingAll &= runComparator(nestProp, matchingCriterion);
+				}
+				else if (matchingCriterion === null){
+					isMatchingAll &= true;
+				}
 			});
 
-			if (true === (!!arePropsValid)) {
-				retListNests.push(currNest);
+			if (true === (!!isMatchingAll)){
+				retNest = currNest;
+				return;
 			}
-
 		});
-		return retListNests;
+
+		return retNest;
 	};
 	/**
 	 * @describe Liste des branches qui supportent d’autres branches
@@ -118,7 +142,7 @@ function ShadockApp(args)
 	 */
 	this.getAllBranchesWithChildren = function()
 	{
-		return this.getAllBranchesWithOrWithoutChildren().children;
+		return COMMON.getAllBranchesWithOrWithoutChildren().children;
 	};
 	/**
 	 * @describe Liste des branches qui ne supportent pas de branche
@@ -126,7 +150,7 @@ function ShadockApp(args)
 	 */
 	this.getAllBranchesWithoutChildren = function()
 	{
-		return this.getAllBranchesWithOrWithoutChildren().nochildren;
+		return COMMON.getAllBranchesWithOrWithoutChildren().nochildren;
 	};
 	/*
 	 * @describe Liste des nids que supporte la branche {name}
@@ -135,11 +159,11 @@ function ShadockApp(args)
 	 * @throws Error
 	 * @return {Array<Nest>}
 	 */
-	this.getNestsInBranchName = function(name)
+	this.getAllNestsInBranchName = function(name)
 	{
 		var retListNest = [];
 		var execRule = function(branch){
-			retListNest.push(branch.nest);
+			retListNest.push(branch.nests);
 		};
 		var branch = COMMON.getBranchByName(name);
 		if (branch === null){
@@ -152,20 +176,28 @@ function ShadockApp(args)
 	 * @describe Liste des nids qui ont toutes les caractéristiques possibles
 	 * @public
 	 * @return {Object} Nest
+	 * @throws Error
 	 */
 	this.getNestWithMaximumProperties = function()
 	{
 		// On récupère tous les nids
 		var listNests = this.getAllNestsInTree();
-		var retListNests = {};
+		if (listNests.length ==0){
+			throw new Error("L'arbre ne contient aucun nid");
+		}
+		var retListNests = [];
 
-		// On vérifie quel nid a le maximum de propriétés
-		var currNest = listNests[0];
-		listNests.forEach(function(nextNest, nIdx)
-		{
-			currNest = (nextNest.props.length > currNest.props.length) ? nextNest : currNest;
-		});
-		return currNest;
+		function sortPattern(a,b) {
+			if (a.props.length < b.props.length)
+				return 1;
+			if (a.props.length > b.props.length)
+				return -1;
+			return 0;
+		}
+
+		listNests = listNests.sort(sortPattern);
+		return listNests.slice(0, 5);
+
 	};
 	/**
 	 * Résoud une fonction de l'this.d'après sa description textuelle {describer}
@@ -186,7 +218,7 @@ function ShadockApp(args)
 				"Liste des nids qui sont en forme de casserole mais pas rouge" : this.getNestWithBoilerShapeAndColorNotRed,
 				"Liste des branches qui supportent d’autres branches" : this.getAllBranchesWithChildren,
 				"Liste des branches qui ne supportent pas de branche" : this.getAllBranchesWithoutChildren,
-				"Liste des nids que supporte la branche {name}" : this.getNestsInBranchName,
+				"Liste des nids que supporte la branche {name}" : this.getAllNestsInBranchName,
 				"Liste des nids qui ont toutes les caractéristiques possibles" : this.getNestWithMaximumProperties
 			}
 		};
@@ -285,7 +317,7 @@ function ShadockApp(args)
 	{
 		// On vérifie que la branche contient des sous-branche
 		// et que la List contient bien le container requis
-		if ('branches' in branch && typeof(list.children) != 'undefined')
+		if ('branches' in branch && branch.branches.length >0 && typeof(list.children) != 'undefined')
 		{
 			// On vérifie à la fois le container de sous-branche et nombre de sous-branches qu'il contient
 			if (branch.branches.length >0)
@@ -420,6 +452,13 @@ ShadockApp.Nest = function(id, branch, props, shadocks)
 	this.props = props || [];
 	this.shadocks = shadocks || [];
 	var _this = this;
+	this.addProp = function(prop)
+	{
+		if (!'type' in prop && !'value' in prop){
+			throw new Error("La propriété est invalide");
+		}
+		this.props.push(prop);
+	}
 	this.addShadocks = function(shadocks)
 	{
 		shadocks.forEach(function(shad){
