@@ -24,7 +24,7 @@ function ShadockApp(args)
 			};
 			dbData.tree.branches.forEach(function(currBranch, bIdx)
 			{
-				COMMON.getNestsInBranch(currBranch, execRule);
+				_INTERNAL.getNestsInBranch(currBranch, execRule);
 			});
 		}
 		return retListNests;
@@ -52,7 +52,7 @@ function ShadockApp(args)
 
 		dbData.tree.branches.forEach(function(currBranch, bIdx)
 		{
-			COMMON.getNestsInBranch(currBranch, execRule);
+			_INTERNAL.getNestsInBranch(currBranch, execRule);
 		});
 		return retListNests;
 	};
@@ -71,7 +71,7 @@ function ShadockApp(args)
 			// On vérifie l'éligibilité migratoire de chaque shadock
 			currNest.shadocks.forEach(function(currShadock, sIdx)
 			{
-				if (true === COMMON.isShadockMovable(currShadock)){
+				if (true === _INTERNAL.isShadockMovable(currShadock)){
 					retListMovableShadocks.push(currShadock);
 				}
 			});
@@ -142,7 +142,7 @@ function ShadockApp(args)
 	 */
 	this.getAllBranchesWithChildren = function()
 	{
-		return COMMON.getAllBranchesWithOrWithoutChildren().children;
+		return _INTERNAL.getAllBranchesWithOrWithoutChildren().children;
 	};
 	/**
 	 * @describe Liste des branches qui ne supportent pas de branche
@@ -150,7 +150,7 @@ function ShadockApp(args)
 	 */
 	this.getAllBranchesWithoutChildren = function()
 	{
-		return COMMON.getAllBranchesWithOrWithoutChildren().nochildren;
+		return _INTERNAL.getAllBranchesWithOrWithoutChildren().nochildren;
 	};
 	/*
 	 * @describe Liste des nids que supporte la branche {name}
@@ -165,11 +165,11 @@ function ShadockApp(args)
 		var execRule = function(branch){
 			retListNest.push(branch.nests);
 		};
-		var branch = COMMON.getBranchByName(name);
+		var branch = _INTERNAL.getBranchByName(name);
 		if (branch === null){
 			throw new Error("La branche '"+name+"' est introuvable");
 		}
-		COMMON.getNestsInBranch(branch, execRule);
+		_INTERNAL.getNestsInBranch(branch, execRule);
 		return retListNest;
 	};
 	/**
@@ -199,43 +199,11 @@ function ShadockApp(args)
 		return listNests.slice(0, 5);
 
 	};
-	/**
-	 * Résoud une fonction de l'this.d'après sa description textuelle {describer}
-	 * @public
-	 * @param {String} describer	le descripteur de la fonction
-	 * @param {mixed}  [arg] 		paramètre optionnel
-	 * @returns void
-	 * @throws Error
-	 */
-	this.callActionByDesc = function(describer, arg)
-	{
-		if (typeof mapper =='undefined')
-		{
-			var mapper =  {
-				"Liste de tous les nids posés sur l’arbre" : shadockApp.getAllNestsInTree,
-				"Liste des nids qui ont plus de 5 Shadocks" : this.getAllNestsWithMoreThanFiveShadocks,
-				"Liste de tous les Shadocks qui peuvent emménager dans un autre nid" : this.getAllShadockMovableToAnotherNest,
-				"Liste des nids qui sont en forme de casserole mais pas rouge" : this.getNestWithBoilerShapeAndColorNotRed,
-				"Liste des branches qui supportent d’autres branches" : this.getAllBranchesWithChildren,
-				"Liste des branches qui ne supportent pas de branche" : this.getAllBranchesWithoutChildren,
-				"Liste des nids que supporte la branche {name}" : this.getAllNestsInBranchName,
-				"Liste des nids qui ont toutes les caractéristiques possibles" : this.getNestWithMaximumProperties
-			}
-		};
-		if (! describer in mapper){
-			throw new Error('Le describer demandé est introuvable : "'+ describer+'"');
-		}
-
-		if (! this.isStarted()){
-			this.start();
-		}
-		return mapper[describer].call(this, arg);
-	};
 	
 	/**************************************************************************/
 
 	// namespace privé
-	var COMMON = {};
+	var _INTERNAL = {};
 
 	/**
 	 * Constructeur de l'application
@@ -243,7 +211,7 @@ function ShadockApp(args)
 	 * @returns void
 	 * @throws Error
 	 */
-	COMMON.start = function(args)
+	_INTERNAL.start = function(args)
 	{
 		dbData = args.db;
 	};
@@ -252,7 +220,7 @@ function ShadockApp(args)
 	 * @private
 	 * @returns {Boolean}
 	 */
-	COMMON.isStarted = function()
+	_INTERNAL.isStarted = function()
 	{
 		return (null !== dbData);
 	};
@@ -261,13 +229,13 @@ function ShadockApp(args)
 	 * @private
 	 * @returns {Object} list:{children: Array<Branch>, nochildren: Array<Branch>}
 	 */
-	COMMON.getAllBranchesWithOrWithoutChildren = function()
+	_INTERNAL.getAllBranchesWithOrWithoutChildren = function()
 	{
 		var list = { children: [], nochildren: []};
 		for (var b in dbData.tree.branches)
 		{
 			var currBranch = dbData.tree.branches[b];
-			COMMON.getBranchChildren(currBranch, list);
+			_INTERNAL.getBranchChildren(currBranch, list);
 		}
 		return list;
 	};
@@ -277,7 +245,7 @@ function ShadockApp(args)
 	 * @private
 	 * @returns Branch || null
 	 */
-	COMMON.getBranchByName = function(name)
+	_INTERNAL.getBranchByName = function(name)
 	{
 		// Callback (filtre) appliqué pour identifier la branche demandée
 		var filterFunc = function(branch){
@@ -295,7 +263,7 @@ function ShadockApp(args)
 	 * @param {Int} id   ID du nid
 	 * @returns {Object} Nest || null
 	 */
-	COMMON.getNestById = function(id)
+	_INTERNAL.getNestById = function(id)
 	{
 		// Callback (filtre) appliqué pour identifier le nid demandé
 		var filterFunc = function(nest){
@@ -313,7 +281,7 @@ function ShadockApp(args)
 	 * @param {Array}   list    contient les "matching" (les éléments trouvés)
 	 * @returns void
 	 */
-	COMMON.getBranchChildren = function(branch, list)
+	_INTERNAL.getBranchChildren = function(branch, list)
 	{
 		// On vérifie que la branche contient des sous-branche
 		// et que la List contient bien le container requis
@@ -324,7 +292,7 @@ function ShadockApp(args)
 			{
 				list.children.push(branch);
 				// Appel récursif pour creuser plus profond
-				COMMON.getBranchChildren(branch.branches, list);
+				_INTERNAL.getBranchChildren(branch.branches, list);
 			}
 		}
 		else if (typeof( list.nochildren) != 'undefined'){
@@ -341,7 +309,7 @@ function ShadockApp(args)
 	 * @returns void
 	 * @throws Error
 	 */
-	COMMON.getNestsInBranch = function(branch, execRule)
+	_INTERNAL.getNestsInBranch = function(branch, execRule)
 	{
 		// Si la branche est invalide, on stoppe.
 		if (typeof branch !=='object'){
@@ -361,7 +329,7 @@ function ShadockApp(args)
 		// on vérifie si la sous-branche contient à son tour des sous-branches. Appel récursif.
 		if ('branches' in branch && branch.branches.length >0){
 			branch.branches.forEach(function(subBranch, bIdx){
-				COMMON.getNestsInBranch(subBranch, execRule);
+				_INTERNAL.getNestsInBranch(subBranch, execRule);
 			});
 
 		}
@@ -371,7 +339,7 @@ function ShadockApp(args)
 	 * @param {Object}  movingShadock   le shadock migrateur
 	 * @returns {Boolean}
 	 */
-	COMMON.isShadockMovable = function(movingShadock)
+	_INTERNAL.isShadockMovable = function(movingShadock)
 	{
 		// les occupants du nid actuel du shadock migrateur
 		var occupiers = movingShadock.nest.shadocks;
@@ -404,7 +372,7 @@ function ShadockApp(args)
 		return (countOnesInstalledLater === 0);
 	};
 
-	COMMON.start(args);
+	_INTERNAL.start(args);
 	
 };
 
