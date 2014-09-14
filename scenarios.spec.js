@@ -246,7 +246,6 @@ function runScenario(describer, term, expectation_cb)
 
 // Appel des méthodes API
 runScenario("Liste de tous les nids posés sur l’arbre", null, function(nests){
-	console.
 	return (nests.length == 6);
 });
 
