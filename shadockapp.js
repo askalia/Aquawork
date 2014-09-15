@@ -182,7 +182,7 @@ function ShadockApp(args)
 	{
 		// On récupère tous les nids
 		var listNests = this.getAllNestsInTree();
-		if (listNests.length ==0){
+		if (listNests.length === 0){
 			throw new Error("L'arbre ne contient aucun nid");
 		}
 		var retListNests = [];
@@ -426,7 +426,7 @@ ShadockApp.Nest = function(id, branch, props, shadocks)
 			throw new Error("La propriété est invalide");
 		}
 		this.props.push(prop);
-	}
+	};
 	this.addShadocks = function(shadocks)
 	{
 		shadocks.forEach(function(shad){
