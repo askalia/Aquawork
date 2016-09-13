@@ -1,3 +1,8 @@
+var ShadockApp = require('./shadockapp');
+var TestRunner = require('./test-runner');
+
+
+
 // Scenarios de test
 var scenariosTest =
 {
@@ -20,7 +25,7 @@ var scenariosTest =
 		subBranche_2Nest.addNest(new ShadockApp.Nest());
 		subBranche_2Nest.addNest(new ShadockApp.Nest());
 
-		var shadockApp = new ShadockApp({ db: dataSource});
+		var shadockApp = ShadockApp.newApp({ db: dataSource});
 		return shadockApp.getAllNestsInTree();
 
 	},
@@ -41,16 +46,17 @@ var scenariosTest =
 		nest2.addShadocks([ new ShadockApp.Shadock()]);
 		rootBranche_2.addNest(nest2);
 		var nest3 = new ShadockApp.Nest();
-		nest3.addShadocks([ new ShadockApp.Shadock(), new ShadockApp.Shadock(),new ShadockApp.Shadock(), new ShadockApp.Shadock(), new ShadockApp.Shadock(), new ShadockApp.Shadock(), new ShadockApp.Shadock(), new ShadockApp.Shadock()]);
+
+		nest3.addShadocks( ShadockApp.factoryShadocks(8) );
 		rootBranche_2.addNest(nest3);
 
 		var subBranche_2 = new ShadockApp.Branch('branche2.1');
 		rootBranche_2.addBranch(subBranche_2);
 		var nest4 = new ShadockApp.Nest();
-		nest4.addShadocks([ new ShadockApp.Shadock(), new ShadockApp.Shadock(),new ShadockApp.Shadock(), new ShadockApp.Shadock(), new ShadockApp.Shadock(), new ShadockApp.Shadock()]);
+		nest4.addShadocks( ShadockApp.factoryShadocks(6) );
 		subBranche_2.addNest(nest4);
 
-		var shadockApp = new ShadockApp({ db: dataSource});
+		var shadockApp = ShadockApp.newApp({ db: dataSource});
 		return shadockApp.getAllNestsWithMoreThanXShadocks(maxItems);
 	},
 	"Liste de tous les Shadocks qui peuvent emménager dans un autre nid" : function()
@@ -62,14 +68,22 @@ var scenariosTest =
 		dataSource.tree.addBranch(rootBranche1);
 
 		var nestLock = new ShadockApp.Nest(1);
-		nestLock.addShadocks([new ShadockApp.Shadock(1, new Date('2014-01-01')), new ShadockApp.Shadock(2, new Date('2014-02-01')), new ShadockApp.Shadock(3, new Date('2014-03-15'))]);
+		nestLock.addShadocks([
+			new ShadockApp.Shadock(1, new Date('2014-01-01')), 
+			new ShadockApp.Shadock(2, new Date('2014-02-01')), 
+			new ShadockApp.Shadock(3, new Date('2014-03-15'))
+		]);
 		rootBranche1.addNest(nestLock);
 
 		var nestUnlock = new ShadockApp.Nest(2);
-		nestUnlock.addShadocks([new ShadockApp.Shadock(4, new Date('2014-04-07')), new ShadockApp.Shadock(5, new Date('2013-11-27')), new ShadockApp.Shadock(6, new Date('2013-12-22'))]);
+		nestUnlock.addShadocks([
+			new ShadockApp.Shadock(4, new Date('2014-04-07')), 
+			new ShadockApp.Shadock(5, new Date('2013-11-27')), 
+			new ShadockApp.Shadock(6, new Date('2013-12-22'))
+		]);
 		rootBranche1.addNest(nestUnlock);
 
-		var shadockApp = new ShadockApp({ db: dataSource});
+		var shadockApp = ShadockApp.newApp({ db: dataSource});
 		return shadockApp.getAllShadockMovableToAnotherNest();
 	},
 	"Liste des nids qui sont en forme de casserole mais pas rouge" : function(criteria)
@@ -95,7 +109,7 @@ var scenariosTest =
 		nest3.addProp({type: 'shape', value:'boiler'});
 		nest3.addProp(({type: 'color', value: 'red'}));
 
-		var shadockApp = new ShadockApp({ db: dataSource});
+		var shadockApp = ShadockApp.newApp({ db: dataSource});
 		return shadockApp.getNestPropMatchingCriteria(criteria);
 	},
 	"Liste des branches qui supportent d’autres branches" : function()
@@ -121,10 +135,10 @@ var scenariosTest =
 		var subBranche_2 = new ShadockApp.Branch('branche2.1');
 		rootBranche_2.addBranch(subBranche_2);
 		var nest4 = new ShadockApp.Nest();
-		nest4.addShadocks([ new ShadockApp.Shadock(), new ShadockApp.Shadock()]);
+		nest4.addShadocks( ShadockApp.factoryShadocks(2) );
 		subBranche_2.addNest(nest4);
 
-		var shadockApp = new ShadockApp({db: dataSource});
+		var shadockApp = ShadockApp.newApp({db: dataSource});
 		return shadockApp.getAllBranchesWithChildren();
 	},
 	"Liste des branches qui ne supportent pas de branche" : function()
@@ -150,10 +164,10 @@ var scenariosTest =
 		var subBranche_2 = new ShadockApp.Branch('branche2.1');
 		rootBranche_2.addBranch(subBranche_2);
 		var nest4 = new ShadockApp.Nest();
-		nest4.addShadocks([ new ShadockApp.Shadock(), new ShadockApp.Shadock()]);
+		nest4.addShadocks( ShadockApp.factoryShadocks(2) );
 		subBranche_2.addNest(nest4);
 
-		var shadockApp = new ShadockApp({db: dataSource});
+		var shadockApp = ShadockApp.newApp({db: dataSource});
 		return shadockApp.getAllBranchesWithoutChildren();
 	},
 	"Liste des nids que supporte la branche {name}" : function(name)
@@ -182,7 +196,7 @@ var scenariosTest =
 		nest4.addShadocks([ new ShadockApp.Shadock(), new ShadockApp.Shadock()]);
 		subBranche_2.addNest(nest4);
 
-		var shadockApp = new ShadockApp({db: dataSource});
+		var shadockApp = ShadockApp.newApp({db: dataSource});
 		return shadockApp.getAllNestsInBranchName(name);
 	},
 	"Liste des nids qui ont toutes les caractéristiques possibles" : function()
@@ -220,59 +234,12 @@ var scenariosTest =
 		nest4.addProp({type: 'cellar', value: '10x10'});
 		nest4.addProp({type: 'bedroom', value: 4});
 
-		var shadockApp = new ShadockApp({ db: dataSource});
+		var shadockApp = ShadockApp.newApp({ db: dataSource});
 		return shadockApp.getNestWithMaximumProperties();
 	}
 
 };
 
-function runScenario(describer, term, expectation_cb)
-{
-	if (! describer in scenariosTest){
-		throw new Error("Ce scenario est introuvable");
-	}
-	var getResult = scenariosTest[describer](term);
-
-	console.log('[RUN] : '+describer);
-	//console.log('result obtained : '+getResult);
-
-	if (typeof(expectation_cb) == 'function')
-	{
-		var expectedResult = expectation_cb.call(this, getResult);
-		console.log('test is passed : '+(!!expectedResult));
-	}
-}
 
 
-// Appel des méthodes API
-runScenario("Liste de tous les nids posés sur l’arbre", null, function(nests){
-	return (nests.length == 6);
-});
-
-runScenario("Liste des nids qui ont plus de X Shadocks", 5, function(nests){
-	return (nests.length ==2);
-});
-
-runScenario("Liste de tous les Shadocks qui peuvent emménager dans un autre nid", null, function(movableShadocks){
-	return (movableShadocks.length == 2);
-});
-runScenario("Liste des nids qui sont en forme de casserole mais pas rouge",
-	[{ type : 'shape', value: 'boiler'},
-		{ type: 'color', value: '!red' }],
-	function(restNest){ return (restNest.id === 2); }
-);
-runScenario("Liste des branches qui supportent d’autres branches", null, function(branches){
-	return (branches.length==1);
-});
-
-runScenario("Liste des branches qui ne supportent pas de branche", null, function(branches){
-	return (branches.length==2);
-});
-
-runScenario("Liste des nids que supporte la branche {name}", 'GaBuZoMe', function(nests){
-	return (nests.length ==2);
-});
-
-runScenario("Liste des nids qui ont toutes les caractéristiques possibles", null, function(nests){
-	return (nests.length==4 && (nests[0].id == 4 && nests[1].id == 2 && nests[2].id == 1 && nests[3].id == 3));
-});
+TestRunner(scenariosTest).runAll();
