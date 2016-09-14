@@ -6,7 +6,7 @@ function TestRunner(scenariosTest)
 
     function runScenario(describer, term, expectation_cb)
     {
-        if (! describer in scenariosTest){
+        if (! scenariosTest.hasOwnProperty(describer)){
             throw new Error("Ce scenario est introuvable");
         }
         var getResult = scenariosTest[describer](term);
