@@ -14,7 +14,7 @@ function TestRunner(scenariosTest)
         console.log('[RUN] : '+describer);
         //console.log('result obtained : '+getResult);
 
-        if (typeof(expectation_cb) == 'function')
+        if (typeof expectation_cb === 'function')
         {
             var expectedResult = expectation_cb.call(this, getResult);
             console.log('test is passed : '+(!!expectedResult));
