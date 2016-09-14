@@ -1,4 +1,7 @@
-module.exports = function TestRunner(scenariosTest)
+
+var scenariosTest = require('./scenarios.spec');
+
+function TestRunner(scenariosTest)
 {
 
     function runScenario(describer, term, expectation_cb)
@@ -61,4 +64,6 @@ module.exports = function TestRunner(scenariosTest)
     return {
         runAll        
     };
-};
+}
+
+TestRunner(scenariosTest).runAll();
